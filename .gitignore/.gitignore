@@ -1,0 +1,130 @@
+#!/usr/bin/python2
+
+#Importiere alle benoetigten libs
+import datetime, time, math
+from neopixel import *
+
+def myround(x, base=5):
+    return int(base * math.floor(float(x)/base))
+
+
+# LED strip configuration:
+LED_COUNT      = 121      # Number of LED pixels.
+LED_PIN        = 18      # GPIO pin connected to the pixels (18 uses PWM!).
+#LED_PIN        = 10      # GPIO pin connected to the pixels (10 uses SPI /dev/spidev0.0).
+LED_FREQ_HZ    = 800000  # LED signal frequency in hertz (usually 800khz)
+LED_DMA        = 10      # DMA channel to use for generating signal (try 10)
+LED_BRIGHTNESS = 255     # Set to 0 for darkest and 255 for brightest
+LED_INVERT     = False   # True to invert the signal (when using NPN transistor level shift)
+LED_CHANNEL    = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
+
+stundenWort={0:"Null",
+             1:"Ein",
+             2:"Zwei",
+             3:"Drei",
+             4:"Vier",
+             5:"Fuenf",
+             6:"Sechs",
+             7:"Sieben",
+             8:"Acht",
+             9:"Neun",
+             10:"Zehn",
+             11:"Elf",
+             12:"Zwoelf",
+             }
+
+minutenWort={
+            0:"",
+            5:"Fuenf nach",
+            10:"Zehn nach",
+            15:"Viertel nach",
+            20:"Zwanzig nach",
+            25:"Fuenf vor halb",
+            30:"halb",
+            35:"fuenf nach halb",
+            40:"zehn nach halb",
+            45:"viertel vor",
+            50:"zehn vor",
+            55:"fuenf vor"
+            }
+
+stundenLED={
+             0:range(60,65),
+             1:range(50,53),
+             2:range(51,55),
+             3:range(34,38),
+             4:range(22,26),
+             5:range(40,44),
+             6:range(5,10),
+             7:range(44,50),
+             8:range(12,16),
+             9:range(26,30),
+             10:range(16,20),
+             11:range(30,33),
+             }
+nach=range(71,75)
+vor=range(68,71)
+halb=range(55,59)
+uhr=range(1,4)
+minutenLED={
+            0:[],
+            5:range(102,106)+nach+uhr,
+            10:range(95,99)+nach+uhr,
+            15:range(81,88)+nach+uhr,
+            20:range(88,95)+nach+uhr,
+            25:range(102,106)+vor+halb,
+            30:halb,
+            35:range(102,106)+nach+halb,
+            40:range(95,99)+nach+halb,
+            45:range(77,88),
+            50:range(95,99)+vor,
+            55:range(102,106)+vor
+            }
+punkteLED={
+            0:[],
+            1:[120],
+            2:[120, 110],
+            3:[120, 110, 0],
+            4:[120, 110, 0, 10]
+            }
+def controlLeds(ledList, myColor):
+    for i in range(LED_COUNT):
+        if (i in ledList):
+            strip.setPixelColor(i,myColor)
+        else:
+            strip.setPixelColor(i,Color(0,0,0))
+    strip.show()
+    
+if __name__ == '__main__':
+
+    # Create NeoPixel object with appropriate configuration.
+    strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
+    # Intialize the library (must be called once before other functions).
+    strip.begin()
+    # Color(G,R,B)
+    esIst=[118,117,115,114,113]
+    
+    myColor=Color(0, 200, 0)  
+    
+    
+
+    aktuelleZeit = datetime.datetime.now()
+    stunden=0#aktuelleZeit.hour%12
+    minuten=0#aktuelleZeit.minute
+
+    controlLeds(esIst+minutenLED[myround(minuten)]+stundenLED[stunden]+punkteLED[minuten%5], myColor)
+    
+    while True:
+        
+        aktuelleZeit = datetime.datetime.now()
+        if(minuten != aktuelleZeit.minute):
+            stunden=aktuelleZeit.hour%12
+            minuten=aktuelleZeit.minute
+            minutenPunkte="."*(minuten%5)
+            if (minuten >= 25):
+                stunden +=1
+            print("Es ist", minutenWort[myround(minuten)], stundenWort[stunden], minutenPunkte)
+            controlLeds(esIst+minutenLED[myround(minuten)]+stundenLED[stunden]+punkteLED[minuten%5]+ uhr, myColor) 
+        else:
+            time.sleep(5)
+
